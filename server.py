@@ -1,9 +1,14 @@
 from xmlrpc.server import SimpleXMLRPCServer,SimpleXMLRPCRequestHandler,DocXMLRPCServer,DocXMLRPCRequestHandler
 import requests
 import xmlrpc.client
+from socketserver import ThreadingMixIn
+import threading
+import time
 class handler(DocXMLRPCRequestHandler):
     rpc_paths = ("/MyServerRpc")
-server = DocXMLRPCServer(("localhost",8000),requestHandler = handler,logRequests=True)
+class MulThreadServer(ThreadingMixIn,DocXMLRPCServer):
+    pass
+server = MulThreadServer(("localhost",8000),requestHandler = handler,logRequests=True)
 server.set_server_title("MY XML-RPC SERVER")
 server.set_server_name("THIS XML-RPC SERVER CAN ACT AS HTTP PROXY TO TRANSFER HTTP REQUEST FOR CLIENT AND DO SOMETHINGS AWESOME !!!")
 server.set_server_documentation("BELOW HERE IS SOME METHOD WE BUILD SO YOU CAN USE THEM !!!")
