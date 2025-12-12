@@ -1,9 +1,8 @@
 from xmlrpc.server import SimpleXMLRPCServer,SimpleXMLRPCRequestHandler,DocXMLRPCServer,DocXMLRPCRequestHandler
-import requests
 import xmlrpc.client
 from socketserver import ThreadingMixIn
-import threading
-import time
+import http.client
+from urllib.parse import urlparse
 class handler(DocXMLRPCRequestHandler):
     rpc_paths = ("/MyServerRpc")
 class MulThreadServer(ThreadingMixIn,DocXMLRPCServer):
@@ -17,19 +16,21 @@ def execute_http(url,method,headers,body):
     This function is use to get request from client demand and return for them the response 
     """
     try:
-        response = requests.request(
-           method = method,
-           url = url,
-           headers = headers,
-           data = body     
-        )
-        return {
-            'status_code' : response.status_code,
-            'headers' : dict(response.headers),
-            'content' : xmlrpc.client.Binary(response.content)
+        execute_url = urlparse(url)
+        conn = http.client.HTTPSConnection(execute_url.netloc)
+        conn.request(method,execute_url.path,body=body,headers=headers)
+        response = conn.getresponse()
+        content = response.read().decode()
+        conn.close()
+        return{
+            "status_code":response.status,
+            "content" : content
         }
     except Exception as e:
-        return {'status_code': 500,'headers':{} ,'content': xmlrpc.client.Binary(str(e).encode())}
+        return {'status_code': 500,
+                'headers':{} ,
+                'content': xmlrpc.client.Binary(str(e).encode())
+        }
 server.register_function(execute_http,"execute_http")
 print("SERVER ARE WAITING......")
 server.serve_forever()

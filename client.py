@@ -1,10 +1,15 @@
 import xmlrpc.client
 import json
-
 proxy = xmlrpc.client.ServerProxy("http://localhost:8000/MyServerRpc")
-response=proxy.execute_http("https://jsonplaceholder.typicode.com/todos/1","GET",{},"")
+try:
+    response=proxy.execute_http("https://jsonplaceholder.typicode.com/todos/1","GET",{},"")
+    print("Connect successfull !! Status:", response['status_code'])
+except Exception as e:
+    print("OUR SERVICE HAVE SOME ERROR !!")
+    print("LOG FOR ERROR : ",e)
+
 print("Status : ",response['status_code'])
-content = response['content'].data.decode()
+content = response['content']
 print(content)
 my_message = {'name':'tuan'}
 make_message_to_string = json.dumps(my_message)
