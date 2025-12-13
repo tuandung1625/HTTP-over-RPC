@@ -7,7 +7,7 @@ class handler(DocXMLRPCRequestHandler):
     rpc_paths = ("/MyServerRpc")
 class MulThreadServer(ThreadingMixIn,DocXMLRPCServer):
     pass
-server = MulThreadServer(("localhost",8000),requestHandler = handler,logRequests=True)
+server = MulThreadServer(("0.0.0.0",8000),requestHandler = handler,logRequests=True)
 server.set_server_title("MY XML-RPC SERVER")
 server.set_server_name("THIS XML-RPC SERVER CAN ACT AS HTTP PROXY TO TRANSFER HTTP REQUEST FOR CLIENT AND DO SOMETHINGS AWESOME !!!")
 server.set_server_documentation("BELOW HERE IS SOME METHOD WE BUILD SO YOU CAN USE THEM !!!")
@@ -31,6 +31,15 @@ def execute_http(url,method,headers,body):
                 'headers':{} ,
                 'content': xmlrpc.client.Binary(str(e).encode())
         }
+def ping():
+    """
+    This function is can be used to ping our rpc to check it live or not 
+    """
+    try:
+        return f"CONNECTED SUCCESSFULLY"
+    except Exception as e:
+        return f"ERROR !!!"
+server.register_function(ping,"ping")
 server.register_function(execute_http,"execute_http")
 print("SERVER ARE WAITING......")
 server.serve_forever()
