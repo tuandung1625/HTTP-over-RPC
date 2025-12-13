@@ -1,7 +1,7 @@
 import xmlrpc.client
 import json
 
-proxy = xmlrpc.client.ServerProxy("http://localhost:8000/MyServerRpc")
+proxy = xmlrpc.client.ServerProxy("http:/192.168.1.13:8000/MyServerRpc")
 
 def get_valid_input(prompt, func):  
     while True:
