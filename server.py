@@ -21,9 +21,13 @@ def execute_http(url,method,headers,body):
             conn = http.client.HTTPSConnection(execute_url.netloc, timeout=10)
         else:
             conn = http.client.HTTPConnection(execute_url.netloc,timeout=10)
-        conn.request(method,execute_url.path,body=body,headers=headers)
+        conn.request(method, execute_url.path or "/", body=body, headers=headers)
         response = conn.getresponse()
-        content = response.read().decode()
+        raw_content = response.read()
+        try:
+            content = raw_content.decode('utf-8')
+        except UnicodeDecodeError:
+            content = f"Response maybe not string , Size: {len(raw_content)} bytes"
         conn.close()
         return{
             "status_code":response.status,
