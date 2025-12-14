@@ -17,7 +17,10 @@ def execute_http(url,method,headers,body):
     """
     try:
         execute_url = urlparse(url)
-        conn = http.client.HTTPSConnection(execute_url.netloc)
+        if execute_url.scheme == "https":
+            conn = http.client.HTTPSConnection(execute_url.netloc, timeout=10)
+        else:
+            conn = http.client.HTTPConnection(execute_url.netloc,timeout=10)
         conn.request(method,execute_url.path,body=body,headers=headers)
         response = conn.getresponse()
         content = response.read().decode()
@@ -31,15 +34,6 @@ def execute_http(url,method,headers,body):
                 'headers':{} ,
                 'content': xmlrpc.client.Binary(str(e).encode())
         }
-def ping():
-    """
-    This function is can be used to ping our rpc to check it live or not 
-    """
-    try:
-        return f"CONNECTED SUCCESSFULLY"
-    except Exception as e:
-        return f"ERROR !!!"
-server.register_function(ping,"ping")
 server.register_function(execute_http,"execute_http")
 print("SERVER ARE WAITING......")
 server.serve_forever()
