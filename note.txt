@@ -1,0 +1,11 @@
+Some method for projects:
+execute_http(url,method,headers,body) : use to request http for client demand
+url : String ex: google.com
+method : string ex:POST ,GET,...
+headers: dict ex : "User-agent":"Mozila/1.0"
+body : string or base64 ex: {
+                                name = FirstName+LastName&Email = blabla@gmail.com
+                            }
+==> this function will return a response contain status , headers,content
+==> use dict to save them ex : "status" : "200","User-agent":"Mozila/1.0",.....
+

@@ -17,13 +17,27 @@ def execute_http(url,method,headers,body):
     """
     try:
         execute_url = urlparse(url)
-        conn = http.client.HTTPSConnection(execute_url.netloc)
-        conn.request(method,execute_url.path,body=body,headers=headers)
+        if execute_url.scheme == "https":
+            conn = http.client.HTTPSConnection(execute_url.netloc, timeout=10)
+        else:
+            conn = http.client.HTTPConnection(execute_url.netloc,timeout=10)
+        path = execute_url.path or "/"
+        if execute_url.query:
+            path += "?" + execute_url.query
+        if isinstance(body,str):
+            body = body.encode('utf-8')
+        conn.request(method,path, body=body, headers=headers)
         response = conn.getresponse()
-        content = response.read().decode()
+        raw_content = response.read()
+        try:
+            content = raw_content.decode('utf-8')
+        except UnicodeDecodeError:
+            content = f"Response maybe not string , Size: {len(raw_content)} bytes"
+        headers_response = dict(response.getheaders())
         conn.close()
         return{
             "status_code":response.status,
+            "headers" : headers_response,
             "content" : content
         }
     except Exception as e:
