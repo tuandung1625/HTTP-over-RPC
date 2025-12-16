@@ -4,7 +4,7 @@ from socketserver import ThreadingMixIn
 import http.client
 from urllib.parse import urlparse
 class handler(DocXMLRPCRequestHandler):
-    rpc_paths = ("/MyServerRpc")
+    rpc_paths = ("/MyServerRpc",)
 class MulThreadServer(ThreadingMixIn,DocXMLRPCServer):
     pass
 server = MulThreadServer(("0.0.0.0",8000),requestHandler = handler,logRequests=True)
@@ -43,7 +43,7 @@ def execute_http(url,method,headers,body):
     except Exception as e:
         return {'status_code': 500,
                 'headers':{} ,
-                'content': xmlrpc.client.Binary(str(e).encode())
+                'content': f"Internal Server Error: {str(e)}"
         }
 server.register_function(execute_http,"execute_http")
 print("SERVER ARE WAITING......")

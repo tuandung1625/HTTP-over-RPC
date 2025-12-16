@@ -54,7 +54,9 @@ def client_main():
 
         print("\n------ RESPONSE FROM SERVER ------")
         print(f"Status: {response.get('status_code')}")
-        print(f"Headers: {response.get('headers')}")
+        print("Headers: ")
+        for k, v in response.get("headers", {}).items():
+            print(f"  {k}: {v}")
         print(f"Content: {response.get('content')}")
         print('------ FINISH RESPONSE ------')
     except Exception as e:
