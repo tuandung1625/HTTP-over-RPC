@@ -1,50 +1,66 @@
-from xmlrpc.server import SimpleXMLRPCServer,SimpleXMLRPCRequestHandler,DocXMLRPCServer,DocXMLRPCRequestHandler
 import xmlrpc.client
-from socketserver import ThreadingMixIn
-import http.client
-from urllib.parse import urlparse
-class handler(DocXMLRPCRequestHandler):
-    rpc_paths = ("/MyServerRpc")
-class MulThreadServer(ThreadingMixIn,DocXMLRPCServer):
-    pass
-server = MulThreadServer(("0.0.0.0",8000),requestHandler = handler,logRequests=True)
-server.set_server_title("MY XML-RPC SERVER")
-server.set_server_name("THIS XML-RPC SERVER CAN ACT AS HTTP PROXY TO TRANSFER HTTP REQUEST FOR CLIENT AND DO SOMETHINGS AWESOME !!!")
-server.set_server_documentation("BELOW HERE IS SOME METHOD WE BUILD SO YOU CAN USE THEM !!!")
-def execute_http(url,method,headers,body):
-    """
-    This function is use to get request from client demand and return for them the response 
-    """
-    try:
-        execute_url = urlparse(url)
-        if execute_url.scheme == "https":
-            conn = http.client.HTTPSConnection(execute_url.netloc, timeout=10)
-        else:
-            conn = http.client.HTTPConnection(execute_url.netloc,timeout=10)
-        path = execute_url.path or "/"
-        if execute_url.query:
-            path += "?" + execute_url.query
-        if isinstance(body,str):
-            body = body.encode('utf-8')
-        conn.request(method,path, body=body, headers=headers)
-        response = conn.getresponse()
-        raw_content = response.read()
+import json
+
+proxy = xmlrpc.client.ServerProxy("http://localhost:8000/MyServerRpc")
+
+def get_valid_input(prompt, func):  
+    while True:
+        user_input = input(prompt).strip()
         try:
-            content = raw_content.decode('utf-8')
-        except UnicodeDecodeError:
-            content = f"Response maybe not string , Size: {len(raw_content)} bytes"
-        headers_response = dict(response.getheaders())
-        conn.close()
-        return{
-            "status_code":response.status,
-            "headers" : headers_response,
-            "content" : content
-        }
+            return func(user_input)
+        except ValueError as e:
+            print(f"Error: {e}. Try again")
+
+def check_url(text):
+    if not text.startswith("http"):
+        raise ValueError("URL must start with http or https")
+    return text
+
+def check_method(text):
+    result = text.upper()
+    valid_methods = {"GET","POST","PUT","DELETE"}
+    if result not in valid_methods:
+        raise ValueError(f"Method must be one of: {valid_methods}")
+    return result
+
+def check_header(text):
+    if text == "":
+        return {}
+    
+    try:
+        data = json.loads(text)
+    except json.JSONDecodeError:
+        raise ValueError("Header must have a valid JSON format")
+    
+    if not isinstance(data,dict):
+        raise ValueError("Header must be a dict type")
+    return data  
+
+def client_main():
+    print("------ PREPARING REQUEST ------\n")
+    url = get_valid_input("Enter URL: ",check_url)
+    method = get_valid_input("Enter method: ",check_method)
+    header = get_valid_input("Enter header: ",check_header)
+    body = ""
+    if method in ["POST","PUT"]:
+        body = input("Enter body load: ").strip()
+    else:
+        print(f"Skip body for {method}")
+
+    print(f"Sending {method} request to server...........")
+
+    try:
+        response = proxy.execute_http(url,method,header,body)
+
+        print("\n------ RESPONSE FROM SERVER ------")
+        print(f"Status: {response.get('status_code')}")
+        print("Headers: ")
+        for k, v in response.get("headers", {}).items():
+            print(f"  {k}: {v}")
+        print(f"Content: {response.get('content')}")
+        print('------ FINISH RESPONSE ------')
     except Exception as e:
-        return {'status_code': 500,
-                'headers':{} ,
-                'content': xmlrpc.client.Binary(str(e).encode())
-        }
-server.register_function(execute_http,"execute_http")
-print("SERVER ARE WAITING......")
-server.serve_forever()
+        print(f"Connection error: {e}")
+
+if __name__ == "__main__":
+    client_main()
